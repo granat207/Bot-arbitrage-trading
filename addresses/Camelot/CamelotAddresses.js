@@ -1,0 +1,4 @@
+const camelotAddresses = {
+"routerV2": 0xc873fEcbd354f5A56E00E710B90EF4201db2448d, 
+"routerV3": 0x1F721E2E82F6676FCE4eA07A5958cF098D339e18
+}

@@ -1,66 +1,49 @@
-## Foundry
+EXPLANATION
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+OptimusPrime Bot is divided by two parts: The hardhat server and the smart contract.
 
-Foundry consists of:
+The main purpose is to build an automated bot that is able to trade 24/7.
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+The step are the following:
 
-## Documentation
+The owner send WETH to the contract with the 'depositWETH' function.
 
-https://book.getfoundry.sh/
+The server must constantly watch for differents pairs on the ARB network (like WETH/USDT or WETH/SHIB) and when there is a good moment to trade, the server will call the 'trade' function in the OptimusPrime smart contract.
 
-## Usage
+The smart contract will buy (from a dex A) and sell (to a sell B) in the same tx (using flash loans) the token desidered, but OptimusPrime contract will lend money to the sender only if the balance after buying and selling that token is >= than the balance borrowed + the amount of fees.
 
-### Build
+The owner of the contract will be able to withdraw the WETH in the contract with the 'withdraw' function and when he wants.
 
-```shell
-$ forge build
-```
+NOTE: The smart contracts will contains the fund necessary (WETH) to trade the token and it will lend them to the sender, so the owner must send money (WETH) to the smart contract in order to use them to trade.
 
-### Test
+If all the steps work and the smart contract is well structured, there won't be losses, expect those for gas (in the arb they're really cheap) and the quicknode arb url (depending on the plan).
 
-```shell
-$ forge test
-```
 
-### Format
+-----------------------------------------------------------------------------------------------------------------
 
-```shell
-$ forge fmt
-```
+BEST SWAPS RECORD UNTIL NOW:
 
-### Gas Snapshots
+WETH / USDC --> uniswapV3, pancakeV3 --> - 0,032 % (pancake pool fee = 100, uniswap pool fee = 500)
 
-```shell
-$ forge snapshot
-```
+WETH / WBTC --> uniswapV3, camelotV3 --> - 0,048 % (uniswap pool fee = 500, camelot pool fee = 0,0612 %)
 
-### Anvil
+WETH / WBTC --> uniswapV3, pancakeV3 --> 0,076 % (pancake pool fee = 500, uniswap pool fe = 500)
 
-```shell
-$ anvil
-```
+WETH / ARB --> pancakeV3, uniswapV3 --> - 0,086 % (pancake pool fee = 500, uniswap pool fee = 500)
 
-### Deploy
+WETH / ARB --> camelotV3, uniswapV3 --> - 0,09 % (uniswap pool fee = 500, camelot pool fee = 0,0857 %)
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
+WETH / USDT --> pancakeV3, uniswapV3 --> - 0,235 % (pancake pool fee = 100, uniswap pool fee = 100)
 
-### Cast
+WETH / WBTC --> uniswapV3, sushiswapV2 --> - 0,396 % (uniswap pool fee = 500)
 
-```shell
-$ cast <subcommand>
-```
+WETH / USDT --> sushiswapV2, uniswapV3 --> - 0,532 % (uniswap pool fee = 100)
 
-### Help
+WETH / ARB --> sushiswapV2, uniswapV3 --> -0,644 % (uniswap pool fee = 500)
 
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+WETH / LINK --> sushiswapV2, uniswapV3 --> -1,379 % (uniswap pool fee = 3000)
+
+WETH / PENDLE --> sushiswapV2, uniswapV3 --> really bad (uniswap pool fee = 3000)
+
+
+
