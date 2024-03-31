@@ -44,8 +44,3 @@ WETH / ARB --> sushiswapV2, uniswapV3 --> -0,644 % (uniswap pool fee = 500)
 WETH / LINK --> sushiswapV2, uniswapV3 --> -1,379 % (uniswap pool fee = 3000)
 
 WETH / PENDLE --> sushiswapV2, uniswapV3 --> really bad (uniswap pool fee = 3000)
-
-
-
-# OptimusPrimeBotArbitrum
-# OptimusPrimeBotArbitrum
