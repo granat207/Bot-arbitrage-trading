@@ -68,7 +68,7 @@ optimusPrime.approveToken(address(weth), sushiswapRouterV2, type(uint256).max);
 vm.stopPrank();
 }
 
-address public tokenToTrade = address(wbtc); 
+address public tokenToTrade = address(usdc); 
 
 // //TRADE BUYING FROM PancakeV3 AND SELLING TO OTHERS DEXES
 // function test_canTradeWETHBuyingFromPancakeV3AndSellingToUniswapV3() public {

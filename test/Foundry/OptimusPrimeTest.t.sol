@@ -86,7 +86,7 @@ vm.expectRevert();
 optimusPrime.setTradeExecutor(address(2326714));
 }
 
-function test_cantvSetTradeExecutor__addressZero() public {
+function test_cantSetTradeExecutor__addressZero() public {
 vm.startPrank(owner);
 
 vm.expectRevert("Can't be a 0 address"); 
@@ -236,58 +236,4 @@ IERC20(weth).approve(address(optimusPrime), 1e18);
 optimusPrime.depositWETH(1e18);
 assertEq(IERC20(weth).allowance(owner, address(optimusPrime)), 0); 
 }
-
-
-
-
-// function test_cantTrade__NotTheExecutor1() public {
-// vm.startPrank(address(321)); 
-
-// address[] memory pancakePath = new address[](2); 
-// pancakePath[0] = address(usdt); 
-// pancakePath[1] = address(wbnb); 
-
-// uint256 minAmountBnbOut = 0; //It is better to add a more specifc value, obtaining the USDT/WBNB ratio - the % of slippage
-// uint24 bnbUniswapPoolFee = 100;  //The uniswap USDT/WBNB fee
-// uint24 bnbPancakePoolFee = 100; 
-// uint256 expectedGas = 0; //In this Foundry test we keep them 0 
-
-// IV3PancakeSwapRouter.ExactInputParams memory pancakeParams = IV3PancakeSwapRouter.ExactInputParams({
-// path: abi.encodePacked(pancakePath[0], bnbPancakePoolFee, pancakePath[1]), 
-// recipient: address(optimusPrime), 
-// amountIn: optimusPrime.returnUSDTbalance(), 
-// amountOutMinimum: minAmountBnbOut
-// }); 
-
-// vm.expectRevert();                                                         
-// optimusPrime.buyWithUSDTFromPancakeV3AndSellToUniswapV3(pancakeParams, address(wbnb), bnbUniswapPoolFee, expectedGas);
-// assertGe(optimusPrime.returnUSDTbalance(), 500e18); 
-// }
-
-
-
-// //BUY from UNISWAP and sell to PANCAKE
-// function test_canTrade__NotTheExecutor2() public {
-// vm.startPrank(address(321)); 
-
-// address[] memory pancakePath = new address[](2); 
-// pancakePath[0] = address(wbnb); 
-// pancakePath[1] = address(usdt); 
-
-// uint256 minAmountBnbOut = 0; //It is better to add a more specifc value, obtaining the USDT/WBNB ratio - the % of slippage
-// uint24 bnbUniswapPoolFee = 100;  //The uniswap USDT/WBNB fee
-// uint24 bnbPancakePoolFee = 100;  //The pancake USDT/WBNB fee
-// uint256 expectedGas = 0; //In this Foundry test we keep them 0 
-
-// IV3SwapRouter.ExactInputParams memory uniswapParams = IV3SwapRouter.ExactInputParams({
-// path: abi.encodePacked(pancakePath[1], bnbUniswapPoolFee, pancakePath[0]), 
-// recipient: address(optimusPrime), 
-// amountIn: optimusPrime.returnUSDTbalance(), 
-// amountOutMinimum: minAmountBnbOut
-// });       
-
-// vm.expectRevert(); 
-// optimusPrime.buyWithUSDTFromUniswapV3AndSellToPancakeV3(uniswapParams, address(wbnb), bnbPancakePoolFee, expectedGas);
-// assertGe(optimusPrime.returnUSDTbalance(), 500e18); 
-// }
 }
