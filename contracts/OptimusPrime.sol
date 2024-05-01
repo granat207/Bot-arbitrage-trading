@@ -4,13 +4,11 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "./uniswap/IV3UniswapSwapRouter.sol"; //UniswapV3
 import "./pancakeswap/IV3PancakeSwapRouter.sol"; //PancakeSwapV3
-import "./camelot/v3/IV3CamelotSwapRouter.sol"; //CamelotV3
-import "./camelot/v2/IV2CamelotSwapRouter.sol"; //CamelotV2
-import "./sushiswap/IV2SushiswapRouter.sol"; //SushiswapV2
 
-import "./chainlink/PriceAggregator.sol"; 
+import "./pancakeswap/IPancakeV3Pool.sol"; //PancakeV3 Pool
+
+import "./chainlink/PriceAggregator.sol"; //Chainlink aggregator
 
 contract OptimusPrime {
 
@@ -20,6 +18,8 @@ error NotTheTradeExecutor(address sender);
 
 error NoProfit(uint256 finalBalance); 
 
+error TokenNotAccepted(address token); 
+
 event Profit(uint256 _finalBalance); 
 
 address private immutable owner; 
@@ -28,24 +28,16 @@ address public tradeExecutor;
 
 IERC20 public constant weth = IERC20(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1); 
 
-IV3UniswapSwapRouter public immutable uniswapRouterV3; 
+IERC20 public constant usdt = IERC20(0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9); 
+
+IERC20 public constant usdc = IERC20(0xaf88d065e77c8cC2239327C5EDb3A432268e5831); 
 
 IV3PancakeSwapRouter public immutable pancakeRouterV3; 
 
-IV3CamelotSwapRouter public immutable camelotRouterV3; 
-
-IV2CamelotSwapRouter public immutable camelotRouterV2; 
-
-IV2SushiswapSwapRouter public immutable sushiswapRouterV2; 
-
 mapping(address => mapping(address => uint256)) private numberOfTokensApproved; 
 
-constructor(address _uniswapRouterV3, address _pancakeswapRouterV3, address _camelotRouterV3, address _camelotRouterV2, address _sushiswapRouterV2) {
-uniswapRouterV3 = IV3UniswapSwapRouter(_uniswapRouterV3);
+constructor(address _pancakeswapRouterV3) {
 pancakeRouterV3 = IV3PancakeSwapRouter(_pancakeswapRouterV3); 
-camelotRouterV3 = IV3CamelotSwapRouter(_camelotRouterV3); 
-camelotRouterV2 = IV2CamelotSwapRouter(_camelotRouterV2); 
-sushiswapRouterV2 = IV2SushiswapSwapRouter(_sushiswapRouterV2); 
 owner = msg.sender; 
 }
 
@@ -67,159 +59,138 @@ _;
 
 
 //DEPOSIT
-function depositWETH(uint256 amount) public OnlyOwner(){
+function depositToken(address token, uint256 amount) public OnlyOwner(){
+if(token != address(usdt) && token != address(usdc)){
+revert TokenNotAccepted(token); 
+}
 require(amount > 0, "Amount can't be 0"); 
-IERC20(weth).transferFrom(msg.sender, address(this), amount);
+IERC20(token).transferFrom(msg.sender, address(this), amount);
 }
 
 //WITHDRAW
-function withdrawWETH(uint256 amount) public OnlyOwner(){
-require(amount <= returnWETHbalance(), "Amount is higher than balance"); 
-IERC20(weth).transfer(msg.sender, amount);
+function withdrawToken(address token, uint256 amount) public OnlyOwner(){
+if(token != address(usdt) && token != address(usdc)){
+revert TokenNotAccepted(token); 
+}
+require(amount <= IERC20(token).balanceOf(address(this)), "Amount is higher than balance"); 
+IERC20(token).transfer(msg.sender, amount);
 }
 
 
 
-//BUY A TOKEN FROM PancakeswapV3 AND SELL TO OTHERS DEXES
-function buyWithWETHFromPancakeV3AndSellToUniswapV3(IV3PancakeSwapRouter.ExactInputParams memory pancakeParams, address tokenToBuy, uint24 uniswapPoolFee, uint256 estimatedGas) public OnlyTradeExecutor(){
-uint256 initialBalance = IERC20(weth).balanceOf(address(this));
+//USDC --> WETH --> USDT
+function trade1(IV3PancakeSwapRouter.ExactInputParams memory params, uint256 initialAmountIn) public OnlyTradeExecutor {
+uint256 initialUsdtBalance = IERC20(usdt).balanceOf(address(this));
 
-buyTokenWithWETH_pancakeswapV3(pancakeParams);
-
-IV3UniswapSwapRouter.ExactInputParams memory uniswapParams = IV3UniswapSwapRouter.ExactInputParams({
-path: abi.encodePacked(tokenToBuy, uniswapPoolFee , weth), 
+sellTokenForWETH_pancakeswapV3(params);
+uint24 fee = 100; 
+IV3PancakeSwapRouter.ExactInputParams memory wethToUsdtParams = IV3PancakeSwapRouter.ExactInputParams({
+path: abi.encodePacked(address(weth), fee, address(usdt)),
 recipient: address(this), 
-amountIn: IERC20(tokenToBuy).balanceOf(address(this)), 
+deadline: block.timestamp, 
+amountIn: IERC20(weth).balanceOf(address(this)), 
 amountOutMinimum: 0
 }); 
-sellTokenForWETH_uniswapV3(uniswapParams);
+buyTokenWithWETH_pancakeswapV3(wethToUsdtParams);
 
-uint256 finalBalance = IERC20(weth).balanceOf(address(this)); 
-if(finalBalance < (initialBalance + estimatedGas)){
- revert NoProfit(finalBalance); 
+uint256 finalUsdtBalance = IERC20(usdt).balanceOf(address(this));
+if((finalUsdtBalance - initialUsdtBalance) > initialAmountIn){
+emit Profit(finalUsdtBalance - initialUsdtBalance);
 }else{
-  emit Profit(finalBalance);
+revert NoProfit(finalUsdtBalance  - initialUsdtBalance); 
 }
 }
 
 
-//BUY A TOKEN FROM UniswapV3 AND SELL TO OTHERS DEXES
-function buyWithWETHFromUniswapV3AndSellToPancakeV3(IV3UniswapSwapRouter.ExactInputParams memory uniswapParams, address tokenToBuy, uint24 pancakePoolFee, uint256 estimatedGas) public OnlyTradeExecutor(){
-uint256 initialBalance = IERC20(weth).balanceOf(address(this));
+//USDT --> WETH --> USDC 
+function trade2(IV3PancakeSwapRouter.ExactInputParams memory params, uint256 initialAmountIn) public OnlyTradeExecutor(){
+uint256 initialUsdcBalance = IERC20(usdc).balanceOf(address(this));
 
-buyTokenWithWETH_uniswapV3(uniswapParams);
-IV3PancakeSwapRouter.ExactInputParams memory pancakeParams = IV3PancakeSwapRouter.ExactInputParams({
-path: abi.encodePacked(tokenToBuy, pancakePoolFee, weth), 
+sellTokenForWETH_pancakeswapV3(params);
+uint24 fee = 100; 
+IV3PancakeSwapRouter.ExactInputParams memory wethToUsdcParams = IV3PancakeSwapRouter.ExactInputParams({
+path: abi.encodePacked(address(weth), fee, address(usdc)),
 recipient: address(this), 
-deadline: block.timestamp,
-amountIn: IERC20(tokenToBuy).balanceOf(address(this)), 
+deadline: block.timestamp, 
+amountIn: IERC20(weth).balanceOf(address(this)), 
 amountOutMinimum: 0
 }); 
-sellTokenForWETH_pancakeswapV3(pancakeParams);
+buyTokenWithWETH_pancakeswapV3(wethToUsdcParams);
 
-uint256 finalBalance = IERC20(weth).balanceOf(address(this)); 
-if(finalBalance < (initialBalance + estimatedGas)){
- revert NoProfit(finalBalance); 
+uint256 finalUsdcBalance = IERC20(usdc).balanceOf(address(this));
+if((finalUsdcBalance - initialUsdcBalance) > initialAmountIn){
+emit Profit(finalUsdcBalance - initialUsdcBalance);
 }else{
- emit Profit(finalBalance);
+revert NoProfit(finalUsdcBalance - initialUsdcBalance); 
 }
 }
 
-function buyWithWETHFromUniswapV3AndSellToSushiswapV2(IV3UniswapSwapRouter.ExactInputParams memory uniswapParams, address tokenToBuy, uint256 estimatedGas) public OnlyTradeExecutor() {
-uint256 initialBalance = IERC20(weth).balanceOf(address(this));
+//USDC --> WETH --> USDT --> USDC
+function trade3(IV3PancakeSwapRouter.ExactInputParams memory params) public OnlyTradeExecutor() {
+uint256 initialUsdcBalance = IERC20(usdc).balanceOf(address(this));
+uint256 initialUsdtBalance = IERC20(usdt).balanceOf(address(this));
 
-buyTokenWithWETH_uniswapV3(uniswapParams);
-address[] memory sushiswapPath = new address[](2); 
-sushiswapPath[0] = tokenToBuy; 
-sushiswapPath[1] = address(weth);
-sellTokenForWETH_sushiswapV2(IERC20(tokenToBuy).balanceOf(address(this)), 0, sushiswapPath, address(this), block.timestamp);
+sellTokenForWETH_pancakeswapV3(params);
 
-uint256 finalBalance = IERC20(weth).balanceOf(address(this)); 
-if(finalBalance < (initialBalance + estimatedGas)){
- revert NoProfit(finalBalance); 
-}else{
- emit Profit(finalBalance);
-}
-}
-
-function buyWithWETHFromUniswapV3AndSellToCamelotV3(IV3UniswapSwapRouter.ExactInputParams memory uniswapParams, address tokenToBuy, uint256 estimatedGas) public OnlyTradeExecutor() {
-uint256 initialBalance = IERC20(weth).balanceOf(address(this));
-
-buyTokenWithWETH_uniswapV3(uniswapParams);
-IV3CamelotSwapRouter.ExactInputParams memory camelotParams = IV3CamelotSwapRouter.ExactInputParams({
-path: abi.encodePacked(tokenToBuy, weth), 
+uint24 fee = 100; 
+IV3PancakeSwapRouter.ExactInputParams memory wethToUsdtParams = IV3PancakeSwapRouter.ExactInputParams({
+path: abi.encodePacked(address(weth), fee, address(usdt)),
 recipient: address(this), 
-deadline: block.timestamp,
-amountIn: IERC20(tokenToBuy).balanceOf(address(this)), 
+deadline: block.timestamp, 
+amountIn: IERC20(weth).balanceOf(address(this)), 
 amountOutMinimum: 0
 }); 
-sellTokenForWETH_camelotV3(camelotParams);
+buyTokenWithWETH_pancakeswapV3(wethToUsdtParams);
 
-uint256 finalBalance = IERC20(weth).balanceOf(address(this)); 
-if(finalBalance < (initialBalance + estimatedGas)){
- revert NoProfit(finalBalance); 
-}else{
- emit Profit(finalBalance);
-}
-}
-
-
-//BUY A TOKEN FROM SushiswapV2 AND SELL TO OTHERS DEXES
-function buyWithWETHFromSushiswapV2AndSellToUniswapV3(uint256 amountIn, address tokenToBuy, uint24 uniswapPoolFee, uint256 estimatedGas) public OnlyTradeExecutor(){
-uint256 initialBalance = IERC20(weth).balanceOf(address(this));
-
-address[] memory sushiswapPath = new address[](2); 
-sushiswapPath[0] = address(weth); 
-sushiswapPath[1] = tokenToBuy;
-buyTokenWithWETH_sushiswapV2(amountIn, 0, sushiswapPath, address(this), block.timestamp);
-IV3UniswapSwapRouter.ExactInputParams memory uniswapParams = IV3UniswapSwapRouter.ExactInputParams({
-path: abi.encodePacked(tokenToBuy, uniswapPoolFee , weth), 
+IV3PancakeSwapRouter.ExactInputParams memory usdtToUsdcParams = IV3PancakeSwapRouter.ExactInputParams({
+path: abi.encodePacked(address(usdt), fee, address(usdc)),
 recipient: address(this), 
-amountIn: IERC20(tokenToBuy).balanceOf(address(this)), 
+deadline: block.timestamp, 
+amountIn: IERC20(usdt).balanceOf(address(this)) - initialUsdtBalance, 
 amountOutMinimum: 0
 }); 
-sellTokenForWETH_uniswapV3(uniswapParams);
+tradeUSDCandUSDT(usdtToUsdcParams);
 
-uint256 finalBalance = IERC20(weth).balanceOf(address(this)); 
-if(finalBalance < (initialBalance + estimatedGas)){
- revert NoProfit(finalBalance); 
+uint256 finalUsdcBalance = IERC20(usdc).balanceOf(address(this));
+if(finalUsdcBalance > initialUsdcBalance){
+emit Profit(finalUsdcBalance);
 }else{
- emit Profit(finalBalance);
+revert NoProfit(finalUsdcBalance); 
 }
 }
 
+//USDT --> WETH --> USDC --> USDT
+function trade4(IV3PancakeSwapRouter.ExactInputParams memory params) public OnlyTradeExecutor() {
+uint256 initialUsdcBalance = IERC20(usdc).balanceOf(address(this));
+uint256 initialUsdtBalance = IERC20(usdt).balanceOf(address(this));
 
-//BUY A TOKEN FROM CamelotV3 AND SELL TO OTHERS DEXES
-function buyWithWETHFromCamelotV3AndSellToUniswapV3(IV3CamelotSwapRouter.ExactInputParams memory camelotParams, address tokenToBuy, uint24 uniswapPoolFee, uint256 estimatedGas) public  OnlyTradeExecutor() {
-uint256 initialBalance = IERC20(weth).balanceOf(address(this));
+sellTokenForWETH_pancakeswapV3(params);
 
-buyTokenWithWETH_camelotV3(camelotParams);
-IV3UniswapSwapRouter.ExactInputParams memory uniswapParams = IV3UniswapSwapRouter.ExactInputParams({
-path: abi.encodePacked(tokenToBuy, uniswapPoolFee , weth), 
+uint24 fee = 100; 
+IV3PancakeSwapRouter.ExactInputParams memory wethToUsdcParams = IV3PancakeSwapRouter.ExactInputParams({
+path: abi.encodePacked(address(weth), fee, address(usdc)),
 recipient: address(this), 
-amountIn: IERC20(tokenToBuy).balanceOf(address(this)), 
+deadline: block.timestamp, 
+amountIn: IERC20(weth).balanceOf(address(this)), 
 amountOutMinimum: 0
 }); 
-sellTokenForWETH_uniswapV3(uniswapParams);
+buyTokenWithWETH_pancakeswapV3(wethToUsdcParams);
 
-uint256 finalBalance = IERC20(weth).balanceOf(address(this)); 
-if(finalBalance < (initialBalance + estimatedGas)){
- revert NoProfit(finalBalance); 
+IV3PancakeSwapRouter.ExactInputParams memory usdcToUsdtParams = IV3PancakeSwapRouter.ExactInputParams({
+path: abi.encodePacked(address(usdc), fee, address(usdt)),
+recipient: address(this), 
+deadline: block.timestamp, 
+amountIn: IERC20(usdc).balanceOf(address(this)) - initialUsdcBalance, 
+amountOutMinimum: 0
+}); 
+tradeUSDCandUSDT(usdcToUsdtParams);
+
+uint256 finalUsdtBalance = IERC20(usdt).balanceOf(address(this));
+if(finalUsdtBalance > initialUsdtBalance){
+emit Profit(finalUsdtBalance);
 }else{
- emit Profit(finalBalance);
+revert NoProfit(finalUsdtBalance); 
 }
-}
-
-
-
-
-//BUY / SELL TOKENS --> UniswapV3
-function buyTokenWithWETH_uniswapV3(IV3UniswapSwapRouter.ExactInputParams memory params) internal {
-IV3UniswapSwapRouter(uniswapRouterV3).exactInput(params);
-}
-
-function sellTokenForWETH_uniswapV3(IV3UniswapSwapRouter.ExactInputParams memory params) internal {
-IV3UniswapSwapRouter(uniswapRouterV3).exactInput(params);
 }
 
 
@@ -232,36 +203,9 @@ function sellTokenForWETH_pancakeswapV3(IV3PancakeSwapRouter.ExactInputParams me
 IV3PancakeSwapRouter(pancakeRouterV3).exactInput(params);
 }
 
-
-//BUY / SELL TOKENS --> SushiswapV2
-function buyTokenWithWETH_sushiswapV2(uint256 amountIn, uint256 amountOutMin, address[] memory path, address to, uint256 deadline) internal {
-IV2SushiswapSwapRouter(sushiswapRouterV2).swapExactTokensForTokens(amountIn, amountOutMin, path, to, deadline);
+function tradeUSDCandUSDT(IV3PancakeSwapRouter.ExactInputParams memory params) internal {
+IV3PancakeSwapRouter(pancakeRouterV3).exactInput(params);
 }
-
-function sellTokenForWETH_sushiswapV2(uint256 amountIn, uint256 amountOutMin, address[] memory path, address to, uint256 deadline) internal {
-IV2SushiswapSwapRouter(sushiswapRouterV2).swapExactTokensForTokens(amountIn, amountOutMin, path, to, deadline);
-}
-
-
-//BUY / SELL TOKENS --> CamelotV2
-function buyTokenWithWETH_camelotV2(uint256 amountIn, uint256 amountOutMin, address[] memory path, address to, address referrer, uint256 deadline) internal {
-IV2CamelotSwapRouter(camelotRouterV2).swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn, amountOutMin, path, to, referrer, deadline);
-}
-
-function sellTokenForWETH_camelotV2(uint256 amountIn, uint256 amountOutMin, address[] memory path, address to, address referrer, uint256 deadline) internal {
-IV2CamelotSwapRouter(camelotRouterV2).swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn, amountOutMin, path, to, referrer, deadline);
-}
-
-
-//BUY / SELL TOKENS --> CamelotV3
-function buyTokenWithWETH_camelotV3(IV3CamelotSwapRouter.ExactInputParams memory params) internal {
-IV3CamelotSwapRouter(camelotRouterV3).exactInput(params);
-}
-
-function sellTokenForWETH_camelotV3(IV3CamelotSwapRouter.ExactInputParams memory params) internal {
-IV3CamelotSwapRouter(camelotRouterV3).exactInput(params);
-}
-
 
 
 //APPROVE TOKENS
@@ -286,6 +230,15 @@ PriceAggregator(0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612).latestRoundData();
 return answer;
 }
 
+function returnBlockTimestamp() public view returns(uint256){
+return block.timestamp; 
+}
+
+function returnPancakePoolV3Price(address pool) public view returns(uint160){
+(uint160 sqrtPriceX96 , , , , , , ) = IPancakeV3Pool(pool).slot0();
+return sqrtPriceX96; 
+}
+
 function returnOwner() public view returns(address) {
 return owner; 
 }
@@ -294,8 +247,8 @@ function returnTokenApproved(address token, address spender)public view returns(
 return numberOfTokensApproved[token][spender]; 
 }
 
-function returnWETHbalance() public view returns(uint256) {
-return IERC20(weth).balanceOf(address(this));
+function returnTokenBalance(address token) public view returns(uint256) {
+return IERC20(token).balanceOf(address(this));
 }
 
 function returnPathData(address tokenA, uint24 poolFee, address tokenB) public pure returns (bytes memory){

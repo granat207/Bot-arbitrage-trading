@@ -17,7 +17,7 @@ module.exports = {
   networks: {
   arbMainnet: {
   url: arbUrl, 
-  accounts: [privateKey]
+  accounts: [tradeExecutorPrivateKey]
   }
   }, 
   etherscan: {

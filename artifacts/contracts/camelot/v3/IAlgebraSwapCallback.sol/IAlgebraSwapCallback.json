@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "IPancakeV3SwapCallback",
-  "sourceName": "contracts/pancakeswap/IPancakeV3SwapCallback.sol",
+  "contractName": "IAlgebraSwapCallback",
+  "sourceName": "contracts/camelot/v3/IAlgebraSwapCallback.sol",
   "abi": [
     {
       "inputs": [
@@ -21,7 +21,7 @@
           "type": "bytes"
         }
       ],
-      "name": "uniswapV3SwapCallback",
+      "name": "algebraSwapCallback",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
