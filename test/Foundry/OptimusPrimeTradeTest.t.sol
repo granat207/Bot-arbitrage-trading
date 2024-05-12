@@ -7,7 +7,7 @@ import {Test, console} from "forge-std/Test.sol";
 
 import {OptimusPrime} from "../../contracts/OptimusPrime.sol"; 
 
-import "../../contracts/pancakeswap/IV3PancakeSwapRouter.sol"; 
+import "../../contracts/pancakeswap/IV3PancakeSwapRouter.sol";  
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  
@@ -77,7 +77,7 @@ optimusPrime.trade1(pancakeParams, optimusPrime.returnTokenBalance(address(usdc)
 }
 
 
-//USDT --> WETH --> USDC 
+//USDT --> WETH --> USDC
 function test_canTrade2() public {
 vm.startPrank(tradeExecutor); 
 
@@ -98,46 +98,4 @@ amountOutMinimum: minAmountTokenOut
 optimusPrime.trade2(pancakeParams, optimusPrime.returnTokenBalance(address(usdt)));
 }
 
-//USDC --> WETH --> USDT --> USDC
-function test_canTrade3() public {
-vm.startPrank(tradeExecutor); 
-
-address[] memory pancakePath = new address[](2); 
-pancakePath[0] = address(usdc); 
-pancakePath[1] = address(tokenToTrade); 
-
-uint256 minAmountTokenOut = 0; 
-uint24 pancakePoolFee = 100; 
-
-IV3PancakeSwapRouter.ExactInputParams memory pancakeParams = IV3PancakeSwapRouter.ExactInputParams({
-path: abi.encodePacked(pancakePath[0], pancakePoolFee, pancakePath[1]), 
-recipient: address(optimusPrime), 
-deadline: block.timestamp, 
-amountIn: optimusPrime.returnTokenBalance(address(usdc)), 
-amountOutMinimum: minAmountTokenOut
-}); 
-optimusPrime.trade3(pancakeParams);
 }
-
-//USDT --> WETH --> USDC --> USDT
-function test_canTrade4() public {
-vm.startPrank(tradeExecutor); 
-
-address[] memory pancakePath = new address[](2); 
-pancakePath[0] = address(usdt); 
-pancakePath[1] = address(tokenToTrade); 
-
-uint256 minAmountTokenOut = 0; 
-uint24 pancakePoolFee = 100;  
-
-IV3PancakeSwapRouter.ExactInputParams memory pancakeParams = IV3PancakeSwapRouter.ExactInputParams({
-path: abi.encodePacked(pancakePath[0], pancakePoolFee, pancakePath[1]), 
-recipient: address(optimusPrime), 
-deadline: block.timestamp, 
-amountIn: optimusPrime.returnTokenBalance(address(usdt)), 
-amountOutMinimum: minAmountTokenOut
-}); 
-optimusPrime.trade4(pancakeParams);
-}
-}
-

@@ -22,14 +22,12 @@ If all the steps work and the smart contract is well structured, there won't be 
 
 Stablecoin used = USDT / USDC
 
+Trade functions simple recapt: 
+trade1 --> USDC --> WETH --> USDT --> USDC 
+trade2 --> USDT --> WETH --> USDC --> USDT 
 
 -----------------------------------------------------------------------------------------------------------------
 
-BEST SWAPS RECORD UNTIL NOW:
-
-USDC --> WETH --> USDT --> + 0,2 % (pancake pools fees = 100) calling "trade1"
-
-USDC --> WETH --> USDT --> USDC --> + 0,065 % (pancake pools fees = 100) calling "trade3"
 
 
 
