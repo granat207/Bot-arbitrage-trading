@@ -7,7 +7,7 @@ const { providers } = require("web3");
 
 //run arbMainnet --> sudo npx hardhat run scripts/server/OptimusPrimeBot.js --network arbMainnet
 
-const optimusPrimeContract = "0x94C57d0F090108d000a42b34Bfb7Ba5B1c298CA8"; 
+const optimusPrimeContract = "0xd10C111eF437D64F32731eCbCA8F86738E76F911"; 
 
 const pancakeV3router = "0x1b81D678ffb9C0263b24A97847620C99d213eB14"; 
 
