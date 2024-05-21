@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-//run test --> sudo forge test --match-path test/Foundry/OptimusPrimeSwapStableTest.t.sol -vvv --fork-url https://convincing-rough-vineyard.arbitrum-mainnet.quiknode.pro/fc6cefc5774214bf87fce9243adf40285dc3b96f/ --gas-report
+//run test --> sudo forge test --match-path test/Foundry/OptimusPrime/OptimusPrimeSwapStableTest.t.sol -vvv --fork-url https://convincing-rough-vineyard.arbitrum-mainnet.quiknode.pro/fc6cefc5774214bf87fce9243adf40285dc3b96f/ --gas-report
 
 import {Test, console} from "forge-std/Test.sol";
 
-import {OptimusPrime} from "../../contracts/OptimusPrime.sol"; 
+import {OptimusPrime} from "../../../contracts/OptimusPrime.sol"; 
 
-import "../../contracts/pancakeswap/IV3PancakeSwapRouter.sol"; 
+import "../../../contracts/pancakeswap/IV3PancakeSwapRouter.sol"; 
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  
@@ -15,7 +15,6 @@ contract OptimusPrimeTest is Test {
 
 address public constant pancakeRouterV3 = 0x1b81D678ffb9C0263b24A97847620C99d213eB14;
 
-address public constant uniswapRouterV3 = 0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45; 
 
 IERC20 public constant usdt = IERC20(0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9);  
 IERC20 public constant usdc = IERC20(0xaf88d065e77c8cC2239327C5EDb3A432268e5831); 
@@ -30,7 +29,7 @@ OptimusPrime public optimusPrime;
 
 function setUp() public {
 owner = address(this); 
-optimusPrime = new OptimusPrime(pancakeRouterV3, uniswapRouterV3); 
+optimusPrime = new OptimusPrime(pancakeRouterV3); 
 vm.startPrank(owner);
 //Approve USDT/USDC in order to deposit them to the contract
 deal(address(usdt), owner, 100e6);
@@ -47,8 +46,6 @@ optimusPrime.depositToken(address(usdc), 100e6); // 100 usdc
 optimusPrime.approveToken(address(weth), pancakeRouterV3, type(uint256).max);
 optimusPrime.approveToken(address(usdt), pancakeRouterV3, type(uint256).max);
 optimusPrime.approveToken(address(usdc), pancakeRouterV3, type(uint256).max);
-optimusPrime.approveToken(address(usdt), uniswapRouterV3, type(uint256).max);
-optimusPrime.approveToken(address(usdc), uniswapRouterV3, type(uint256).max);
 
 vm.stopPrank();
 }
@@ -109,45 +106,5 @@ optimusPrime.withdrawToken(address(usdc), 100e6);
 vm.expectRevert();
 optimusPrime.swapUSDCforUSDTnoSlippage();
 vm.stopPrank(); 
-}
-
-//USDT --> USDC, 1 % slippage
-function test_canCorrectlySwapUSDTforUSDCwithSlippage() public {
-vm.startPrank(owner); 
-uint256 usdcBalanceBeforeSwap = IERC20(usdc).balanceOf(address(optimusPrime));
-
-optimusPrime.swapUSDTforUSDCwithSlippage();
-
-uint256 usdcBalanceAfterSwap = IERC20(usdc).balanceOf(address(optimusPrime));
-uint256 usdtBalanceAfterSwap = IERC20(usdt).balanceOf(address(optimusPrime));
-assertGt(usdcBalanceAfterSwap, usdcBalanceBeforeSwap);
-assertEq(usdtBalanceAfterSwap, 0); 
-
-console.log("After swapping USDT --> USDC these are the results"); 
-console.log("--------------------------------------------------"); 
-console.log("Before balance was 100 USDT, 100 USDC"); 
-console.log("Now the USDC balance is ", usdcBalanceAfterSwap); 
-console.log("Now the USDT balance is",  usdtBalanceAfterSwap); 
-console.log("--------------------------------------------------"); 
-}
-
-//USDC --> USDT, 1 % slippage
-function test_canCorrectlySwapUSDCforUSDTwithSlippage() public {
-vm.startPrank(owner); 
-uint256 usdtBalanceBeforeSwap = IERC20(usdt).balanceOf(address(optimusPrime));
-
-optimusPrime.swapUSDCforUSDTwithSlippage();
-
-uint256 usdcBalanceAfterSwap = IERC20(usdc).balanceOf(address(optimusPrime));
-uint256 usdtBalanceAfterSwap = IERC20(usdt).balanceOf(address(optimusPrime));
-assertGt(usdtBalanceAfterSwap, usdtBalanceBeforeSwap);
-assertEq(usdcBalanceAfterSwap, 0); 
-
-console.log("After swapping USDC --> USDT these are the results"); 
-console.log("--------------------------------------------------"); 
-console.log("Before balance was 100 USDT, 100 USDC"); 
-console.log("Now the USDC balance is ", usdcBalanceAfterSwap); 
-console.log("Now the USDT balance is",  usdtBalanceAfterSwap); 
-console.log("--------------------------------------------------"); 
 }
 }

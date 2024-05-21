@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-//run test --> sudo forge test --match-path test/Foundry/OptimusPrimeTest.t.sol -vvv --fork-url https://convincing-rough-vineyard.arbitrum-mainnet.quiknode.pro/fc6cefc5774214bf87fce9243adf40285dc3b96f/ --gas-report
+//run test --> sudo forge test --match-path test/Foundry/OptimusPrime/OptimusPrimeTest.t.sol -vvv --fork-url https://convincing-rough-vineyard.arbitrum-mainnet.quiknode.pro/fc6cefc5774214bf87fce9243adf40285dc3b96f/ --gas-report
 
 import {Test, console} from "forge-std/Test.sol";
 
-import {OptimusPrime} from "../../contracts/OptimusPrime.sol"; 
+import {OptimusPrime} from "../../../contracts/OptimusPrime.sol"; 
 
-import "../../contracts/pancakeswap/IV3PancakeSwapRouter.sol"; 
+import "../../../contracts/pancakeswap/IV3PancakeSwapRouter.sol"; 
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  
@@ -15,10 +15,9 @@ contract OptimusPrimeTest is Test {
 
 address public constant pancakeRouterV3 = 0x1b81D678ffb9C0263b24A97847620C99d213eB14;
 
-address public constant uniswapRouterV3 = 0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45; 
-
 IERC20 public constant usdt = IERC20(0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9);  
 IERC20 public constant usdc = IERC20(0xaf88d065e77c8cC2239327C5EDb3A432268e5831); 
+IERC20 public constant link = IERC20(0xf97f4df75117a78c1A5a0DBb814Af92458539FB4); 
 
 IERC20 public constant weth = IERC20(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1); 
 
@@ -30,7 +29,7 @@ OptimusPrime public optimusPrime;
 
 function setUp() public {
 owner = address(this); 
-optimusPrime = new OptimusPrime(pancakeRouterV3, uniswapRouterV3); 
+optimusPrime = new OptimusPrime(pancakeRouterV3); 
 vm.startPrank(owner);
 //Approve USDT/USDC in order to deposit them to the contract
 deal(address(usdt), owner, 1000e6);
@@ -280,5 +279,20 @@ assertEq(usdcBalanceAfterWithdraw, usdcBalanceAfterDeposit - withdrawAmount);
 assertEq(usdtBalanceAfterWithdraw, usdtBalanceAfterDeposit - withdrawAmount); 
 assertEq(ownerUsdcBalanceAfterWithdraw, withdrawAmount); 
 assertEq(ownerUsdtBalanceAfterWithdraw, withdrawAmount); 
+}
+
+//APPROVE TOKEN
+function test_allowanceWorksCorrect() public view {
+assertEq(IERC20(weth).allowance(address(optimusPrime), pancakeRouterV3), type(uint256).max); 
+assertEq(IERC20(usdt).allowance(address(optimusPrime), pancakeRouterV3), type(uint256).max); 
+assertEq(IERC20(usdc).allowance(address(optimusPrime), pancakeRouterV3), type(uint256).max); 
+}
+
+function test_onlyOwnerCanApproveToken() public {
+address casualAddress = address(12139); 
+vm.startPrank(casualAddress);
+
+vm.expectRevert();
+optimusPrime.approveToken(address(link), pancakeRouterV3, type(uint256).max);
 }
 }

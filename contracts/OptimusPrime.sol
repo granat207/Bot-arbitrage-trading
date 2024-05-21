@@ -6,11 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "./pancakeswap/IV3PancakeSwapRouter.sol"; //PancakeSwapV3 Router
 
-import "./uniswap/IV3UniswapSwapRouter.sol"; //UniswapV3 Router
-
 import "./pancakeswap/IPancakeV3Pool.sol"; //PancakeV3 Pool
-
-import "./uniswap/IUniswapV3Pool.sol"; //UniswapV3 Pool
 
 contract OptimusPrime {
 
@@ -38,13 +34,8 @@ bool public isLocked;
 
 IV3PancakeSwapRouter public immutable pancakeRouterV3; 
 
-IV3UniswapSwapRouter public immutable uniswapRouterV3; 
-
-mapping(address => mapping(address => uint256)) private numberOfTokensApproved; 
-
-constructor(address _pancakeswapRouterV3, address _uniswapRouterV3) {
+constructor(address _pancakeswapRouterV3) {
 pancakeRouterV3 = IV3PancakeSwapRouter(_pancakeswapRouterV3); 
-uniswapRouterV3 = IV3UniswapSwapRouter(_uniswapRouterV3); 
 owner = msg.sender; 
 }
 
@@ -96,16 +87,7 @@ IERC20(token).transfer(msg.sender, amount);
 function trade1(IV3PancakeSwapRouter.ExactInputParams memory params, uint256 initialAmountIn) public OnlyTradeExecutor {
 uint256 initialUsdtBalance = IERC20(usdt).balanceOf(address(this));
 
-sellTokenForWETH_pancakeswapV3(params);
-uint24 fee = 100; 
-IV3PancakeSwapRouter.ExactInputParams memory wethToUsdtParams = IV3PancakeSwapRouter.ExactInputParams({
-path: abi.encodePacked(address(weth), fee, address(usdt)),
-recipient: address(this), 
-deadline: block.timestamp, 
-amountIn: IERC20(weth).balanceOf(address(this)), 
-amountOutMinimum: 0
-}); 
-buyTokenWithWETH_pancakeswapV3(wethToUsdtParams);
+IV3PancakeSwapRouter(pancakeRouterV3).exactInput(params);
 
 uint256 finalUsdtBalance = IERC20(usdt).balanceOf(address(this));
 if((finalUsdtBalance - initialUsdtBalance) > initialAmountIn){
@@ -119,16 +101,7 @@ revert NoProfit(finalUsdtBalance  - initialUsdtBalance);
 function trade2(IV3PancakeSwapRouter.ExactInputParams memory params, uint256 initialAmountIn) public OnlyTradeExecutor(){
 uint256 initialUsdcBalance = IERC20(usdc).balanceOf(address(this));
 
-sellTokenForWETH_pancakeswapV3(params);
-uint24 fee = 100; 
-IV3PancakeSwapRouter.ExactInputParams memory wethToUsdcParams = IV3PancakeSwapRouter.ExactInputParams({
-path: abi.encodePacked(address(weth), fee, address(usdc)),
-recipient: address(this), 
-deadline: block.timestamp, 
-amountIn: IERC20(weth).balanceOf(address(this)), 
-amountOutMinimum: 0
-}); 
-buyTokenWithWETH_pancakeswapV3(wethToUsdcParams);
+IV3PancakeSwapRouter(pancakeRouterV3).exactInput(params);
 
 uint256 finalUsdcBalance = IERC20(usdc).balanceOf(address(this));
 if((finalUsdcBalance - initialUsdcBalance) > initialAmountIn){
@@ -138,65 +111,7 @@ revert NoProfit(finalUsdcBalance - initialUsdcBalance);
 }
 }
 
-//USDT --> USDC, 1 % slippage
-function swapUSDTforUSDCwithSlippage() public OnlyOwner(){
-(uint160 sqrtPriceX96Uniswap , , , , , , ) = IUniswapV3Pool(0xbE3aD6a5669Dc0B8b12FeBC03608860C31E2eef6).slot0();
-(uint160 sqrtPriceX96Pancake , , , , , , ) = IPancakeV3Pool(0x7e928afb59f5dE9D2f4d162f754C6eB40c88aA8E).slot0();
-if(sqrtPriceX96Uniswap > sqrtPriceX96Pancake){
-//swap from pancake
-uint24 fee = 100; 
-uint256 amountIn = IERC20(usdt).balanceOf(address(this)); 
-IV3PancakeSwapRouter.ExactInputParams memory params = IV3PancakeSwapRouter.ExactInputParams({
-path: abi.encodePacked(address(usdt), fee, address(usdc)),
-recipient: address(this), 
-deadline: block.timestamp, 
-amountIn: amountIn, 
-amountOutMinimum: amountIn - (amountIn * 1) / 100
-}); 
-IV3PancakeSwapRouter(pancakeRouterV3).exactInput(params);
-} else {
-//swap from uniswap
-uint24 fee = 100; 
-uint256 amountIn = IERC20(usdt).balanceOf(address(this)); 
-IV3UniswapSwapRouter.ExactInputParams memory params = IV3UniswapSwapRouter.ExactInputParams({
-path: abi.encodePacked(address(usdt), fee, address(usdc)),
-recipient: address(this), 
-amountIn: amountIn, 
-amountOutMinimum: amountIn - (amountIn * 1) / 100
-}); 
-IV3UniswapSwapRouter(uniswapRouterV3).exactInput(params);
-}
-}
 
-//USDC --> USDT, 1 % slippage
-function swapUSDCforUSDTwithSlippage() public OnlyOwner(){
-(uint160 sqrtPriceX96Uniswap , , , , , , ) = IUniswapV3Pool(0xbE3aD6a5669Dc0B8b12FeBC03608860C31E2eef6).slot0();
-(uint160 sqrtPriceX96Pancake , , , , , , ) = IPancakeV3Pool(0x7e928afb59f5dE9D2f4d162f754C6eB40c88aA8E).slot0();
-if(sqrtPriceX96Uniswap > sqrtPriceX96Pancake){
-//swap from uniswap
-uint24 fee = 100; 
-uint256 amountIn = IERC20(usdc).balanceOf(address(this)); 
-IV3UniswapSwapRouter.ExactInputParams memory params = IV3UniswapSwapRouter.ExactInputParams({
-path: abi.encodePacked(address(usdc), fee, address(usdt)),
-recipient: address(this), 
-amountIn: amountIn, 
-amountOutMinimum:  amountIn - (amountIn * 1) / 100
-}); 
-IV3UniswapSwapRouter(uniswapRouterV3).exactInput(params);
-} else {
-//swap from pancake
-uint24 fee = 100; 
-uint256 amountIn = IERC20(usdc).balanceOf(address(this)); 
-IV3PancakeSwapRouter.ExactInputParams memory params = IV3PancakeSwapRouter.ExactInputParams({
-path: abi.encodePacked(address(usdc), fee, address(usdt)),
-recipient: address(this), 
-deadline: block.timestamp, 
-amountIn: amountIn, 
-amountOutMinimum:  amountIn - (amountIn * 1) / 100
-}); 
-IV3PancakeSwapRouter(pancakeRouterV3).exactInput(params);
-}
-}
 
 //USDT --> USDC, no slippage
 function swapUSDTforUSDCnoSlippage() public OnlyOwner(){
@@ -228,20 +143,8 @@ IV3PancakeSwapRouter(pancakeRouterV3).exactInput(params);
 
 
 
-//BUY / SELL TOKENS --> PancakeswapV3
-function buyTokenWithWETH_pancakeswapV3(IV3PancakeSwapRouter.ExactInputParams memory params) internal {
-IV3PancakeSwapRouter(pancakeRouterV3).exactInput(params);
-}
-
-function sellTokenForWETH_pancakeswapV3(IV3PancakeSwapRouter.ExactInputParams memory params) internal {
-IV3PancakeSwapRouter(pancakeRouterV3).exactInput(params);
-}
-
-
-
 //APPROVE TOKENS
 function approveToken(address tokenToApprove, address spender, uint256 amount) public OnlyOwner(){
-numberOfTokensApproved[tokenToApprove][spender] = amount; 
 IERC20(tokenToApprove).approve(spender, amount);
 }
 
@@ -257,10 +160,6 @@ tradeExecutor = _tradeExecutor;
 //RETURN DATA, VIEW
 function returnBlockTimestamp() public view returns(uint256){
 return block.timestamp; 
-}
-
-function returnTokenApproved(address token, address spender)public view returns(uint256){
-return numberOfTokensApproved[token][spender]; 
 }
 
 function returnTokenBalance(address token) public view returns(uint256) {

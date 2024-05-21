@@ -3,9 +3,9 @@ const { providers } = require("web3");
 
 //NOTE: This Bot trades on the Arb network. 
 
-//run localhost --> sudo npx hardhat run scripts/bot-server/OptimusPrimeBot.js --network localhost
+//run localhost --> sudo npx hardhat run scripts/OptimusPrime/bot-server/OptimusPrimeBot.js --network localhost
 
-//run arbMainnet --> sudo npx hardhat run scripts/server/OptimusPrimeBot.js --network arbMainnet
+//run arbMainnet --> sudo npx hardhat run scripts/OptimusPrime/server/OptimusPrimeBot.js --network arbMainnet
 
 const optimusPrimeContract = "0xd10C111eF437D64F32731eCbCA8F86738E76F911"; 
 
@@ -74,7 +74,7 @@ async function call_trade1(){
 const getContractUsdcBalance1 = await optimusPrime.returnTokenBalance(usdcAddress); 
 if(getContractUsdcBalance1 != 0){
   try{
-   const getEncodedPath = await optimusPrime.returnPathData(usdcAddress, 100, wethAddress); 
+   const getEncodedPath = await optimusPrime.returnPathData(usdcAddress, 100, wethAddress, 100, usdtAddress); 
    const getContractUsdcBalance = await optimusPrime.returnTokenBalance(usdcAddress); 
    const deadline = await optimusPrime.returnBlockTimestamp(); 
    const deadlineUint = parseInt(deadline); 
@@ -100,7 +100,7 @@ async function call_trade2(){
 const getContractUsdtBalance1 = await optimusPrime.returnTokenBalance(usdtAddress); 
 if(getContractUsdtBalance1 != 0){
   try{
-   const getEncodedPath = await optimusPrime.returnPathData(usdtAddress, 100, wethAddress); 
+   const getEncodedPath = await optimusPrime.returnPathData(usdtAddress, 100, wethAddress, 100, usdcAddress); 
    const getContractUsdtBalance = await optimusPrime.returnTokenBalance(usdtAddress); 
    const deadline = await optimusPrime.returnBlockTimestamp(); 
    const deadlineUint = parseInt(deadline); 
