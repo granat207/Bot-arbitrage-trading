@@ -54,106 +54,6 @@ vm.stopPrank();
 
 address public tokenToTrade = address(weth); 
 
-//USDC --> WETH --> USDT with 100 $ 
-function test_canTrade1_100() public {
-vm.startPrank(tradeExecutor); 
-
-address[] memory pancakePath = new address[](3); 
-pancakePath[0] = address(usdc); 
-pancakePath[1] = address(tokenToTrade); 
-pancakePath[2] = address(usdt); 
-
-uint256 minAmountTokenOut = 0; 
-uint24 pancakePoolFee = 100; 
-
-IV3PancakeSwapRouter.ExactInputParams memory pancakeParams = IV3PancakeSwapRouter.ExactInputParams({
-path: abi.encodePacked(pancakePath[0], pancakePoolFee, pancakePath[1], pancakePoolFee, pancakePath[2]), 
-recipient: address(optimusPrime), 
-deadline: block.timestamp, 
-amountIn: optimusPrime.returnTokenBalance(address(usdc)), 
-amountOutMinimum: minAmountTokenOut
-}); 
-optimusPrime.trade1(pancakeParams, optimusPrime.returnTokenBalance(address(usdc)));
-}
-
-//USDC --> WETH --> USDT with 150 $ 
-function test_canTrade1_150() public {
-vm.startPrank(owner);
-optimusPrime.depositToken(address(usdc), 50e6);
-vm.stopPrank();
-
-vm.startPrank(tradeExecutor); 
-
-address[] memory pancakePath = new address[](3); 
-pancakePath[0] = address(usdc); 
-pancakePath[1] = address(tokenToTrade); 
-pancakePath[2] = address(usdt); 
-
-uint256 minAmountTokenOut = 0; 
-uint24 pancakePoolFee = 100; 
-
-IV3PancakeSwapRouter.ExactInputParams memory pancakeParams = IV3PancakeSwapRouter.ExactInputParams({
-path: abi.encodePacked(pancakePath[0], pancakePoolFee, pancakePath[1], pancakePoolFee, pancakePath[2]), 
-recipient: address(optimusPrime), 
-deadline: block.timestamp, 
-amountIn: optimusPrime.returnTokenBalance(address(usdc)), 
-amountOutMinimum: minAmountTokenOut
-}); 
-optimusPrime.trade1(pancakeParams, optimusPrime.returnTokenBalance(address(usdc)));
-}
-
-//USDC --> WETH --> USDT with 200 $ 
-function test_canTrade1_200() public {
-vm.startPrank(owner);
-optimusPrime.depositToken(address(usdc), 100e6);
-vm.stopPrank();
-
-vm.startPrank(tradeExecutor); 
-
-address[] memory pancakePath = new address[](3); 
-pancakePath[0] = address(usdc); 
-pancakePath[1] = address(tokenToTrade); 
-pancakePath[2] = address(usdt); 
-
-uint256 minAmountTokenOut = 0; 
-uint24 pancakePoolFee = 100; 
-
-IV3PancakeSwapRouter.ExactInputParams memory pancakeParams = IV3PancakeSwapRouter.ExactInputParams({
-path: abi.encodePacked(pancakePath[0], pancakePoolFee, pancakePath[1], pancakePoolFee, pancakePath[2]), 
-recipient: address(optimusPrime), 
-deadline: block.timestamp, 
-amountIn: optimusPrime.returnTokenBalance(address(usdc)), 
-amountOutMinimum: minAmountTokenOut
-}); 
-optimusPrime.trade1(pancakeParams, optimusPrime.returnTokenBalance(address(usdc)));
-}
-
-//USDC --> WETH --> USDT with 300 $ 
-function test_canTrade1_300() public {
-vm.startPrank(owner);
-optimusPrime.depositToken(address(usdc), 200e6);
-vm.stopPrank();
-
-vm.startPrank(tradeExecutor); 
-
-address[] memory pancakePath = new address[](3); 
-pancakePath[0] = address(usdc); 
-pancakePath[1] = address(tokenToTrade); 
-pancakePath[2] = address(usdt); 
-
-uint256 minAmountTokenOut = 0; 
-uint24 pancakePoolFee = 100; 
-
-IV3PancakeSwapRouter.ExactInputParams memory pancakeParams = IV3PancakeSwapRouter.ExactInputParams({
-path: abi.encodePacked(pancakePath[0], pancakePoolFee, pancakePath[1], pancakePoolFee, pancakePath[2]), 
-recipient: address(optimusPrime), 
-deadline: block.timestamp, 
-amountIn: optimusPrime.returnTokenBalance(address(usdc)), 
-amountOutMinimum: minAmountTokenOut
-}); 
-optimusPrime.trade1(pancakeParams, optimusPrime.returnTokenBalance(address(usdc)));
-}
-
 
 //USDT --> WETH --> USDC with 100$
 function test_canTrade2_100() public {
@@ -233,6 +133,58 @@ optimusPrime.trade2(pancakeParams, optimusPrime.returnTokenBalance(address(usdt)
 function test_canTrade2_300() public {
 vm.startPrank(owner);
 optimusPrime.depositToken(address(usdt), 200e6);
+vm.stopPrank();
+
+vm.startPrank(tradeExecutor); 
+
+address[] memory pancakePath = new address[](3); 
+pancakePath[0] = address(usdt); 
+pancakePath[1] = address(tokenToTrade); 
+pancakePath[2] = address(usdc); 
+
+uint256 minAmountTokenOut = 0; 
+uint24 pancakePoolFee = 100;  
+
+IV3PancakeSwapRouter.ExactInputParams memory pancakeParams = IV3PancakeSwapRouter.ExactInputParams({
+path: abi.encodePacked(pancakePath[0], pancakePoolFee, pancakePath[1], pancakePoolFee, pancakePath[2]), 
+recipient: address(optimusPrime), 
+deadline: block.timestamp, 
+amountIn: optimusPrime.returnTokenBalance(address(usdt)), 
+amountOutMinimum: minAmountTokenOut
+}); 
+optimusPrime.trade2(pancakeParams, optimusPrime.returnTokenBalance(address(usdt)));
+}
+
+//USDT --> WETH --> USDC with 400 $ 
+function test_canTrade2_400() public {
+vm.startPrank(owner);
+optimusPrime.depositToken(address(usdt), 300e6);
+vm.stopPrank();
+
+vm.startPrank(tradeExecutor); 
+
+address[] memory pancakePath = new address[](3); 
+pancakePath[0] = address(usdt); 
+pancakePath[1] = address(tokenToTrade); 
+pancakePath[2] = address(usdc); 
+
+uint256 minAmountTokenOut = 0; 
+uint24 pancakePoolFee = 100;  
+
+IV3PancakeSwapRouter.ExactInputParams memory pancakeParams = IV3PancakeSwapRouter.ExactInputParams({
+path: abi.encodePacked(pancakePath[0], pancakePoolFee, pancakePath[1], pancakePoolFee, pancakePath[2]), 
+recipient: address(optimusPrime), 
+deadline: block.timestamp, 
+amountIn: optimusPrime.returnTokenBalance(address(usdt)), 
+amountOutMinimum: minAmountTokenOut
+}); 
+optimusPrime.trade2(pancakeParams, optimusPrime.returnTokenBalance(address(usdt)));
+}
+
+//USDT --> WETH --> USDC with 500 $ 
+function test_canTrade2_500() public {
+vm.startPrank(owner);
+optimusPrime.depositToken(address(usdt), 400e6);
 vm.stopPrank();
 
 vm.startPrank(tradeExecutor); 

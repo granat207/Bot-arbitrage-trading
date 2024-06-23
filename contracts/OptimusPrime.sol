@@ -83,7 +83,6 @@ IERC20(token).transfer(msg.sender, amount);
 
 
 
-//USDC --> WETH --> USDT
 function trade1(IV3PancakeSwapRouter.ExactInputParams memory params, uint256 initialAmountIn) public OnlyTradeExecutor {
 uint256 initialUsdtBalance = IERC20(usdt).balanceOf(address(this));
 
@@ -97,7 +96,7 @@ revert NoProfit(finalUsdtBalance  - initialUsdtBalance);
 }
 }
 
-//USDT --> WETH --> USDC
+
 function trade2(IV3PancakeSwapRouter.ExactInputParams memory params, uint256 initialAmountIn) public OnlyTradeExecutor(){
 uint256 initialUsdcBalance = IERC20(usdc).balanceOf(address(this));
 

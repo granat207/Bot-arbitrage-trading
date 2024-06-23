@@ -9,8 +9,6 @@ const { providers } = require("web3");
 
 const optimusPrimeContract = "0xd10C111eF437D64F32731eCbCA8F86738E76F911"; 
 
-const pancakeV3router = "0x1b81D678ffb9C0263b24A97847620C99d213eB14"; 
-
 const usdtAddress = "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9"; 
 
 const usdcAddress = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"; 

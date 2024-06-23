@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/daniel/Desktop/bot/optimus-prime-arbitraggio/optimus-prime-arbitrum/contracts/OptimusPrime.sol": {
-      "lastModificationDate": 1715531710402,
-      "contentHash": "e698678a3b4af6c6533d08920a00d610",
+      "lastModificationDate": 1719056004550,
+      "contentHash": "01f75c8de99ca7584d8fca53435b4309",
       "sourceName": "contracts/OptimusPrime.sol",
       "solcConfig": {
         "version": "0.8.20",
@@ -32,9 +32,7 @@
       "imports": [
         "@openzeppelin/contracts/token/ERC20/IERC20.sol",
         "./pancakeswap/IV3PancakeSwapRouter.sol",
-        "./uniswap/IV3UniswapSwapRouter.sol",
-        "./pancakeswap/IPancakeV3Pool.sol",
-        "./uniswap/IUniswapV3Pool.sol"
+        "./pancakeswap/IPancakeV3Pool.sol"
       ],
       "versionPragmas": [
         "^0.8.19"
@@ -1037,6 +1035,85 @@
       ],
       "artifacts": [
         "IUniswapV3PoolDeployer"
+      ]
+    },
+    "/Users/daniel/Desktop/bot/optimus-prime-arbitraggio/optimus-prime-arbitrum/contracts/FlashOptimusPrime.sol": {
+      "lastModificationDate": 1717343407569,
+      "contentHash": "ada18ff769d26014482c6b6e9cff0789",
+      "sourceName": "contracts/FlashOptimusPrime.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "./pancakeswap/IV3PancakeSwapRouter.sol",
+        "./pancakeswap/IPancakeV3Pool.sol",
+        "./uniswap/IV3UniswapSwapRouter.sol",
+        "./uniswap/IUniswapV3Pool.sol",
+        "./uniswap/IUniswapV3FlashCallback.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "FlashOptimusPrime"
+      ]
+    },
+    "/Users/daniel/Desktop/bot/optimus-prime-arbitraggio/optimus-prime-arbitrum/contracts/uniswap/IUniswapV3FlashCallback.sol": {
+      "lastModificationDate": 1717343407567,
+      "contentHash": "192f6012651286e06663dbaf47c97cd3",
+      "sourceName": "contracts/uniswap/IUniswapV3FlashCallback.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.5.0"
+      ],
+      "artifacts": [
+        "IUniswapV3FlashCallback"
       ]
     }
   }
