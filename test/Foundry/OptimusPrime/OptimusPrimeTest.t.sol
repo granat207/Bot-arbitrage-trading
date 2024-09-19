@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-//run test --> sudo forge test --match-path test/Foundry/OptimusPrime/OptimusPrimeTest.t.sol -vvv --fork-url https://convincing-rough-vineyard.arbitrum-mainnet.quiknode.pro/fc6cefc5774214bf87fce9243adf40285dc3b96f/ --gas-report
+//run test --> sudo forge test --match-path test/Foundry/OptimusPrime/OptimusPrimeTest.t.sol -vvv --fork-url select-your-arb-rpc-url --gas-report
 
 import {Test, console} from "forge-std/Test.sol";
 
