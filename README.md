@@ -1,6 +1,4 @@
-trade1 = USDC --> WETH --> USDT (only pancake V3)
-
-trade2 = USDT --> WETH --> USDC (only pancake V3)
+In order to run tests and scripts, make sure to utilize your own rpc url and private keys.
 
 
 
