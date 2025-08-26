@@ -26,6 +26,14 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'   
+
+      - name: Install NPM packages
+        run: npm install
 
       - name: Run Forge build
         id: build
