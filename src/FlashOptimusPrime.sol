@@ -4,15 +4,15 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "./pancakeswap/IV3PancakeSwapRouter.sol"; //PancakeSwapV3 Router
+import "./protocols/interfaces/pancakeswap/IV3PancakeSwapRouter.sol"; //PancakeSwapV3 Router
 
-import "./pancakeswap/IPancakeV3Pool.sol"; //PancakeV3 Pool
+import "./protocols/interfaces/pancakeswap/IPancakeV3Pool.sol"; //PancakeV3 Pool
 
-import "./uniswap/IV3UniswapSwapRouter.sol"; //UniswapV3 router
+import "./protocols/interfaces/uniswap/IV3UniswapSwapRouter.sol"; //UniswapV3 router
 
-import "./uniswap/IUniswapV3Pool.sol"; //UniswapV3 Pool
+import "./protocols/interfaces/uniswap/IUniswapV3Pool.sol"; //UniswapV3 Pool
 
-import "./uniswap/IUniswapV3FlashCallback.sol"; 
+import "./protocols/interfaces/uniswap/IUniswapV3FlashCallback.sol"; 
 
 contract FlashOptimusPrime is IUniswapV3FlashCallback{
 

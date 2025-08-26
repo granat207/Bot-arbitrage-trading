@@ -4,9 +4,9 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "./pancakeswap/IV3PancakeSwapRouter.sol"; //PancakeSwapV3 Router
+import "./protocols/interfaces/pancakeswap/IV3PancakeSwapRouter.sol"; //PancakeSwapV3 Router
 
-import "./pancakeswap/IPancakeV3Pool.sol"; //PancakeV3 Pool
+import "./protocols/interfaces/pancakeswap/IPancakeV3Pool.sol"; //PancakeV3 Pool
 
 contract OptimusPrime {
 
