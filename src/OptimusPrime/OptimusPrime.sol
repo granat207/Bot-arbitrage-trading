@@ -135,64 +135,6 @@ function withdrawToken(address token, uint256 amount) public OnlyOwner(){
 /// Trade functions (OnlyTradeExecutor)
 /// -----------------------------------------------------------------------
 
-/// @notice Execute an exact-input multi-hop trade on Pancake V3 and return to the contract.
-/// @dev
-/// - `path` is constructed as `initialToken -> tokenToTrade -> initialToken` using provided fees.
-/// - Caller must ensure this contract holds `amountIn` of `initialToken` before calling.
-/// - Uses `amountOutMinimum = 0`; caller accepts the slippage risk. Consider passing a minimum or validating off-chain.
-/// - Emits `Profit` if final balance > initial balance; otherwise reverts with `NoProfit`.
-/// @param initialToken The token that will be spent and that profit is measured against.
-/// @param tokenToTrade The intermediate token used in the arbitrage.
-/// @param amountIn Amount of `initialToken` to spend.
-/// @param feeX Fee tier to use for first hop (packed into path).
-/// @param feeY Fee tier to use for second hop (packed into path).
-function tradeOnPancakeV3(address initialToken, address tokenToTrade, uint256 amountIn, uint24 feeX, uint24 feeY) public OnlyTradeExecutor {
-    uint256 initialTokenBalance = IERC20(initialToken).balanceOf(address(this));
-
-    IV3PancakeSwapRouter.ExactInputParams memory params = IV3PancakeSwapRouter.ExactInputParams({
-    path: abi.encodePacked(initialToken, feeX, tokenToTrade, feeY, initialToken),
-    recipient: address(this), 
-    deadline: block.timestamp, 
-    amountIn: amountIn, 
-    amountOutMinimum: 0
-    }); 
-    uint256 amountOut = IV3PancakeSwapRouter(pancakeRouterV3).exactInput(params);
-
-    uint256 finalTokenBalance = IERC20(initialToken).balanceOf(address(this));
-    if(finalTokenBalance > initialTokenBalance){
-      emit Profit(finalTokenBalance - initialTokenBalance);
-    } else {
-      revert NoProfit(amountIn, amountOut); 
-    }
-}
-
-
-/// @notice Execute an exact-input multi-hop trade on Uniswap V3 and return to the contract.
-/// @dev See `tradeOnPancakeV3` notes — this uses the Uniswap router instead.
-/// @param initialToken The token that will be spent and that profit is measured against.
-/// @param tokenToTrade The intermediate token used in the arbitrage.
-/// @param amountIn Amount of `initialToken` to spend.
-/// @param feeX Fee tier to use for first hop (packed into path).
-/// @param feeY Fee tier to use for second hop (packed into path).
-function tradeOnUniswapV3(address initialToken, address tokenToTrade, uint256 amountIn, uint24 feeX, uint24 feeY) public OnlyTradeExecutor(){
-    uint256 initialTokenBalance = IERC20(initialToken).balanceOf(address(this));
-
-    IV3UniswapSwapRouter.ExactInputParams memory params = IV3UniswapSwapRouter.ExactInputParams({
-    path: abi.encodePacked(initialToken, feeX, tokenToTrade, feeY, initialToken),
-    recipient: address(this),  
-    amountIn: amountIn, 
-    amountOutMinimum: 0
-    }); 
-    uint256 amountOut = IV3UniswapSwapRouter(uniswapRouterV3).exactInput(params);
-
-    uint256 finalTokenBalance = IERC20(initialToken).balanceOf(address(this));
-   if(finalTokenBalance > initialTokenBalance){
-      emit Profit(finalTokenBalance - initialTokenBalance);
-    } else {
-      revert NoProfit(amountIn, amountOut); 
-    }
-}
-
 
 /// @notice Execute a two-step arbitrage: UniswapV3 then PancakeV3, returning final tokens to this contract.
 /// @dev `amountOutUniswap` from the first router is used as `amountIn` for the second router.
