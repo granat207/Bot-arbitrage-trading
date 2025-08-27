@@ -55,11 +55,9 @@ address private immutable owner;
 
 address public tradeExecutor; 
 
-IERC20 public constant WETH = IERC20(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1); 
+IERC20 public immutable USDT; 
 
-IERC20 public constant USDT = IERC20(0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9); 
-
-IERC20 public constant USDC = IERC20(0xaf88d065e77c8cC2239327C5EDb3A432268e5831); 
+IERC20 public immutable USDC; 
 
 IV3PancakeSwapRouter public immutable pancakeRouterV3; 
 
@@ -74,9 +72,11 @@ IV3UniswapSwapRouter public immutable uniswapRouterV3;
 /// @dev Provide correct router addresses for the target chain. `owner` is set to `msg.sender`.
 /// @param _pancakeswapRouterV3 Address of the Pancake V3 router contract.
 /// @param _uniswapRouterV3 Address of the Uniswap V3 router contract.
-constructor(address _pancakeswapRouterV3, address _uniswapRouterV3) {
+constructor(address _pancakeswapRouterV3, address _uniswapRouterV3, address _USDT, address _USDC) {
 pancakeRouterV3 = IV3PancakeSwapRouter(_pancakeswapRouterV3); 
 uniswapRouterV3 = IV3UniswapSwapRouter(_uniswapRouterV3);
+USDT = IERC20(_USDT); 
+USDC = IERC20(_USDC); 
 owner = msg.sender; 
 }
 
