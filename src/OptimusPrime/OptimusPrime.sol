@@ -294,7 +294,7 @@ function swapStablesWithoutSlippage(address initialToken, address finalToken, ui
 /// @param finalToken Token to swap to (should be USDT or USDC).
 /// @param amount Amount of `initialToken` to swap.
 /// @param pancakePoolFee Fee tier used in the path encoding.
-function swapStableWithSlippage(address initialToken, address finalToken, uint256 amount, uint24 pancakePoolFee) public OnlyOwner(){
+function swapStablesWithSlippage(address initialToken, address finalToken, uint256 amount, uint24 pancakePoolFee) public OnlyOwner(){
     IV3UniswapSwapRouter.ExactInputParams memory params = IV3UniswapSwapRouter.ExactInputParams({
     path: abi.encodePacked(initialToken, pancakePoolFee, finalToken),
     recipient: address(this), 
