@@ -37,7 +37,8 @@ Both contracts implement role-restricted access (owner, trade executor), profit 
 - Node.js
 - Use an Arbitrum RPC URL
 
-### Install
+### Workflow
+```bash
 git clone https://github.com/granat207/Bot-arbitrage-trading.git
 cd Bot-arbitrage-trading
 forge install
