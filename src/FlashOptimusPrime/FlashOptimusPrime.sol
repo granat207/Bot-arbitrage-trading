@@ -21,6 +21,10 @@ contract FlashOptimusPrime is IUniswapV3FlashCallback {
 /// @param sender The address of the unauthorized caller.
 error NotTheOwner(address sender); 
 
+/// @notice Reverts when a non-tradeExecutor tries to call restricted functions.
+/// @param sender The address of the unauthorized caller.
+error NotTheTradeExecutor(address sender);
+
 /// @notice Reverts when a non-borrowed pool calls the flash loan callback.
 /// @param sender The address of the unauthorized caller.
 error NotTheFlashLoanPool(address sender); 
@@ -49,6 +53,8 @@ address public immutable uniswapRouterV3;
 
 address public immutable owner; 
 
+address public tradeExecutor; 
+
 enum CodePath {
 	UniswapV3AndPancakeV3, 
 	PancakeV3AndUniswapV3
@@ -65,8 +71,6 @@ address public tokenToTrade;
 address public borrowedByPool; 
 
 uint256 public amountBorrowed; 
-
-address[] public path; 
 
 uint24[] public poolFees; 
 
@@ -89,6 +93,14 @@ owner = msg.sender;
 modifier OnlyOwner() {
     if(msg.sender != owner) {
         revert NotTheOwner(msg.sender); 
+    }
+    _; 
+}
+
+/// @notice Restricts function access to only the contract tradeExecutor.
+modifier OnlyTradeExecutor() {
+    if(msg.sender != tradeExecutor) {
+        revert NotTheTradeExecutor(msg.sender); 
     }
     _; 
 }
@@ -122,9 +134,8 @@ function withdraw(address token, uint256 amount) public OnlyOwner {
 /// @param _tokenToTrade The token to trade against.
 /// @param _token0AmounBorrowed The amount of token0 to borrow.
 /// @param _token1AmountBorrowed The amount of token1 to borrow.
-/// @param _path The swap path for trades.
 /// @param _poolFees The fee tiers for each swap.
-function initFlash(CodePath _codePath, address _poolBorrowed, address _tokenBorrowed, address _tokenToTrade, uint256 _token0AmounBorrowed, uint256 _token1AmountBorrowed, address[] memory _path, uint24[] memory _poolFees) public OnlyOwner(){
+function initFlash(CodePath _codePath, address _poolBorrowed, address _tokenBorrowed, address _tokenToTrade, uint256 _token0AmounBorrowed, uint256 _token1AmountBorrowed, uint24[] memory _poolFees) public OnlyTradeExecutor(){
     isFlashLoaning = true; 
 
     if(_token0AmounBorrowed > 0 && _token1AmountBorrowed > 0) {
@@ -135,7 +146,6 @@ function initFlash(CodePath _codePath, address _poolBorrowed, address _tokenBorr
     tokenBorrowed = _tokenBorrowed;
     tokenToTrade = _tokenToTrade; 
     borrowedByPool = _poolBorrowed; 
-    path = _path; 
     poolFees = _poolFees; 
 
     if(_token0AmounBorrowed > 0){
@@ -236,5 +246,14 @@ function tradeOnPancakeV3AndUniswapV3() internal {
 /// @param value The amount of tokens to approve.
 function approveToken(address token, address spender, uint256 value) public OnlyOwner(){
     IERC20(token).approve(spender, value);
+}
+
+/// @notice Configure the address that is allowed to execute trades.
+/// @dev Only owner can set. `_tradeExecutor` cannot be zero address or this contract.
+/// @param _tradeExecutor Address of the trade executor.
+function setTradeExecutor(address _tradeExecutor) public OnlyOwner(){
+    require(_tradeExecutor != (address(0)), "Can't be a 0 address"); 
+    require(_tradeExecutor != address(this), "Can't be this address");
+    tradeExecutor = _tradeExecutor; 
 }
 }
